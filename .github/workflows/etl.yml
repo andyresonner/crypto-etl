@@ -1,9 +1,21 @@
 name: Hourly ETL
 
-on: workflow_dispatch
+on: workflow_dispatch   # manual button for now
 
 jobs:
-  noop:
+  etl:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "✅ Workflow file is valid"
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install -r requirements.txt
+
+      - run: python -m crypto_etl.main
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'auto: append new price row'
