@@ -1,3 +1,9 @@
 name: Hourly ETL
 
-on: workflow_dispatch   # adds a “Run workflow” button
+on: workflow_dispatch
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "✅ Workflow file is valid"
