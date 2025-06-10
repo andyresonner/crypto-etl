@@ -1,6 +1,9 @@
 name: Hourly ETL
 
-on: workflow_dispatch   # manual button for now
+on:
+  schedule:
+    - cron: '0 * * * *'      # every hour at minute 0 (UTC)
+  workflow_dispatch          # keeps the manual “Run workflow” button
 
 jobs:
   etl:
