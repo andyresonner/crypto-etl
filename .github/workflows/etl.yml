@@ -1,12 +1,12 @@
 name: Hourly ETL
 
 permissions:
-  contents: write          # allow this job to push changes
+  contents: write          # allow this job to push changes back to main
 
 on:
   schedule:
     - cron: '0 * * * *'    # every hour at minute 0 (UTC)
-  workflow_dispatch        # keep the manual “Run workflow” button
+  workflow_dispatch: {}    # keeps the manual “Run workflow” button
 
 jobs:
   etl:
