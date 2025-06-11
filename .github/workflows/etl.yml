@@ -1,12 +1,12 @@
 name: Hourly ETL
 
 permissions:
-  contents: write          # allow this job to push changes back to main
+  contents: write
 
 on:
   schedule:
-    - cron: '0 * * * *'    # every hour at minute 0 (UTC)
-  workflow_dispatch: {}    # keeps the manual “Run workflow” button
+    - cron: '0 * * * *'     # hourly
+  workflow_dispatch: {}
 
 jobs:
   etl:
@@ -20,8 +20,9 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python -m crypto_etl.main
+      - run: python -m crypto_etl.main          # update prices.csv
+      - run: python plot.py                     # generate docs/chart.png
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'auto: append new price row'
+          commit_message: 'auto: update data & chart'
