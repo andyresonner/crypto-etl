@@ -58,16 +58,29 @@ def append_csv(rows: list[dict]) -> None:
 
 def regenerate_chart() -> None:
     """Read the CSV and draw a simple price-history PNG for GitHub Pages."""
-    # First, check if the CSV file exists and is not empty before trying to read it.
+    
+    # --- START OF NEW DEBUGGING CODE ---
+    print("--- Starting regenerate_chart function ---")
+    if PRICES_CSV.exists():
+        print(f"'{PRICES_CSV}' exists.")
+        file_size = PRICES_CSV.stat().st_size
+        print(f"File size is: {file_size} bytes.")
+        if file_size > 0:
+            print("--- File content: ---")
+            print(PRICES_CSV.read_text())
+            print("---------------------")
+    else:
+        print(f"'{PRICES_CSV}' does NOT exist.")
+    # --- END OF NEW DEBUGGING CODE ---
+
     if not PRICES_CSV.exists() or PRICES_CSV.stat().st_size == 0:
         print(f"'{PRICES_CSV}' not found or is empty. Skipping chart generation.")
-        return  # Exit the function early
+        return
 
-    import pandas as pd  # only used here
+    import pandas as pd
 
     df = pd.read_csv(PRICES_CSV, parse_dates=["ts"])
     
-    # Add another check in case the file exists but has no data rows
     if df.empty:
         print(f"'{PRICES_CSV}' is empty after reading. Skipping chart generation.")
         return
@@ -86,17 +99,10 @@ def regenerate_chart() -> None:
 # Main
 # --------------------------------------------------------------------------- #
 def main() -> None:
-    # 1 – ensure warehouse/db exists
     db.init_db()
-
-    # 2 – fetch latest prices
     rows = fetch_prices()
-
-    # 3 – append to SQLite + CSV
     db.append_prices(rows)
     append_csv(rows)
-
-    # 4 – redraw chart for GitHub Pages
     regenerate_chart()
 
 
