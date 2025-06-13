@@ -36,8 +36,14 @@ def fetch_prices() -> list[dict]:
         "https://api.coingecko.com/api/v3/simple/price"
         "?ids=bitcoin,ethereum&vs_currencies=usd"
     )
-    with urllib.request.urlopen(url, timeout=30) as fh:
-        data = json.load(fh)
+    
+    # This 'try...except' block makes your script more robust.
+    try:
+        with urllib.request.urlopen(url, timeout=30) as fh:
+            data = json.load(fh)
+    except Exception as e:
+        print(f"ERROR: Could not fetch prices from API: {e}")
+        return [] # Return an empty list to prevent a crash
 
     ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
     rows = [
@@ -48,6 +54,10 @@ def fetch_prices() -> list[dict]:
 
 
 def append_csv(rows: list[dict]) -> None:
+    # If the API call failed, the 'rows' list will be empty and this does nothing.
+    if not rows:
+        return
+
     csv_exists = PRICES_CSV.exists()
     with PRICES_CSV.open("a", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=["timestamp", "coin", "price_usd"])
@@ -84,8 +94,11 @@ def regenerate_chart() -> None:
 def main() -> None:
     db.init_db()
     rows = fetch_prices()
+    
+    # If the API call failed, the functions below will handle the empty 'rows' list.
     db.append_prices(rows)
     append_csv(rows)
+
     regenerate_chart()
 
 
