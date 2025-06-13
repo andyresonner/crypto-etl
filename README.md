@@ -1,3 +1,4 @@
+[![Hourly ETL](https://github.com/andyresonner/crypto-etl/actions/workflows/etl.yml/badge.svg)](https://github.com/andyresonner/crypto-etl/actions/workflows/etl.yml)
 # crypto-etl
 
 Hourly Bitcoin & Ethereum price ETL — built with **GitHub Actions**
