@@ -31,7 +31,7 @@ COINS = {
 
 
 def fetch_prices() -> list[dict]:
-    """Return a list of rows {ts, coin, price_usd} for BTC & ETH (CoinGecko)."""
+    """Return a list of rows {timestamp, coin, price_usd} for BTC & ETH."""
     url = (
         "https://api.coingecko.com/api/v3/simple/price"
         "?ids=bitcoin,ethereum&vs_currencies=usd"
@@ -41,7 +41,7 @@ def fetch_prices() -> list[dict]:
 
     ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
     rows = [
-        {"ts": ts, "coin": COINS[k], "price_usd": float(v["usd"])}
+        {"timestamp": ts, "coin": COINS[k], "price_usd": float(v["usd"])}
         for k, v in data.items()
     ]
     return rows
@@ -50,7 +50,7 @@ def fetch_prices() -> list[dict]:
 def append_csv(rows: list[dict]) -> None:
     csv_exists = PRICES_CSV.exists()
     with PRICES_CSV.open("a", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["ts", "coin", "price_usd"])
+        w = csv.DictWriter(fh, fieldnames=["timestamp", "coin", "price_usd"])
         if not csv_exists:
             w.writeheader()
         w.writerows(rows)
@@ -58,36 +58,19 @@ def append_csv(rows: list[dict]) -> None:
 
 def regenerate_chart() -> None:
     """Read the CSV and draw a simple price-history PNG for GitHub Pages."""
-    
-    # --- START OF NEW DEBUGGING CODE ---
-    print("--- Starting regenerate_chart function ---")
-    if PRICES_CSV.exists():
-        print(f"'{PRICES_CSV}' exists.")
-        file_size = PRICES_CSV.stat().st_size
-        print(f"File size is: {file_size} bytes.")
-        if file_size > 0:
-            print("--- File content: ---")
-            print(PRICES_CSV.read_text())
-            print("---------------------")
-    else:
-        print(f"'{PRICES_CSV}' does NOT exist.")
-    # --- END OF NEW DEBUGGING CODE ---
-
     if not PRICES_CSV.exists() or PRICES_CSV.stat().st_size == 0:
-        print(f"'{PRICES_CSV}' not found or is empty. Skipping chart generation.")
         return
 
     import pandas as pd
 
-    df = pd.read_csv(PRICES_CSV, parse_dates=["ts"])
+    df = pd.read_csv(PRICES_CSV, parse_dates=["timestamp"])
     
     if df.empty:
-        print(f"'{PRICES_CSV}' is empty after reading. Skipping chart generation.")
         return
 
     fig, ax = plt.subplots(figsize=(9, 5), dpi=120)
     for coin, grp in df.groupby("coin"):
-        grp.plot(x="ts", y="price_usd", ax=ax, label=coin.lower())
+        grp.plot(x="timestamp", y="price_usd", ax=ax, label=coin.lower())
     ax.set_ylabel("USD")
     ax.set_title("BTC & ETH price history (UTC)")
     fig.tight_layout()
