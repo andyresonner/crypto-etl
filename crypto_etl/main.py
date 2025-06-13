@@ -58,9 +58,20 @@ def append_csv(rows: list[dict]) -> None:
 
 def regenerate_chart() -> None:
     """Read the CSV and draw a simple price-history PNG for GitHub Pages."""
+    # First, check if the CSV file exists and is not empty before trying to read it.
+    if not PRICES_CSV.exists() or PRICES_CSV.stat().st_size == 0:
+        print(f"'{PRICES_CSV}' not found or is empty. Skipping chart generation.")
+        return  # Exit the function early
+
     import pandas as pd  # only used here
 
     df = pd.read_csv(PRICES_CSV, parse_dates=["ts"])
+    
+    # Add another check in case the file exists but has no data rows
+    if df.empty:
+        print(f"'{PRICES_CSV}' is empty after reading. Skipping chart generation.")
+        return
+
     fig, ax = plt.subplots(figsize=(9, 5), dpi=120)
     for coin, grp in df.groupby("coin"):
         grp.plot(x="ts", y="price_usd", ax=ax, label=coin.lower())
