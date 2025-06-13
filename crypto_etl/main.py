@@ -37,13 +37,12 @@ def fetch_prices() -> list[dict]:
         "?ids=bitcoin,ethereum&vs_currencies=usd"
     )
     
-    # This 'try...except' block makes your script more robust.
     try:
         with urllib.request.urlopen(url, timeout=30) as fh:
             data = json.load(fh)
     except Exception as e:
         print(f"ERROR: Could not fetch prices from API: {e}")
-        return [] # Return an empty list to prevent a crash
+        return []
 
     ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
     rows = [
@@ -54,7 +53,6 @@ def fetch_prices() -> list[dict]:
 
 
 def append_csv(rows: list[dict]) -> None:
-    # If the API call failed, the 'rows' list will be empty and this does nothing.
     if not rows:
         return
 
@@ -67,7 +65,7 @@ def append_csv(rows: list[dict]) -> None:
 
 
 def regenerate_chart() -> None:
-    """Read the CSV and draw a simple price-history PNG for GitHub Pages."""
+    """Read the CSV, calculate moving average, and draw the chart."""
     if not PRICES_CSV.exists() or PRICES_CSV.stat().st_size == 0:
         return
 
@@ -79,10 +77,22 @@ def regenerate_chart() -> None:
         return
 
     fig, ax = plt.subplots(figsize=(9, 5), dpi=120)
+    
+    # --- Start of new moving average code ---
     for coin, grp in df.groupby("coin"):
-        grp.plot(x="timestamp", y="price_usd", ax=ax, label=coin.lower())
+        # Calculate the 7-period moving average
+        grp['MA_7'] = grp['price_usd'].rolling(window=7).mean()
+
+        # Plot the original price
+        grp.plot(x="timestamp", y="price_usd", ax=ax, label=f"{coin.lower()} price")
+        
+        # Plot the moving average
+        grp.plot(x="timestamp", y="MA_7", ax=ax, label=f"{coin.lower()} 7-period MA", linestyle='--')
+    # --- End of new moving average code ---
+
     ax.set_ylabel("USD")
-    ax.set_title("BTC & ETH price history (UTC)")
+    ax.set_title("BTC & ETH Price History & Moving Average (UTC)")
+    ax.legend() # Add a legend to distinguish the lines
     fig.tight_layout()
     fig.savefig(CHART_PNG)
     plt.close(fig)
@@ -95,9 +105,9 @@ def main() -> None:
     db.init_db()
     rows = fetch_prices()
     
-    # If the API call failed, the functions below will handle the empty 'rows' list.
-    db.append_prices(rows)
-    append_csv(rows)
+    if rows:
+        db.append_prices(rows)
+        append_csv(rows)
 
     regenerate_chart()
 
