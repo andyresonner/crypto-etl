@@ -19,10 +19,10 @@ def init_db() -> None:
     cur = con.cursor()
     
     # Create the 'prices' table if it's not already there.
-    # This table will store the timestamp, coin ticker, and price.
+    # The column names now match main.py
     cur.execute("""
         CREATE TABLE IF NOT EXISTS prices (
-            ts TEXT,
+            timestamp TEXT,
             coin TEXT,
             price_usd REAL
         )
@@ -40,9 +40,9 @@ def append_prices(rows: list[dict]) -> None:
     cur = con.cursor()
     
     # Prepare the data for insertion
-    # The rows are dictionaries like {'ts': '...', 'coin': '...', 'price_usd': ...}
+    # This now correctly looks for 'timestamp' instead of 'ts'
     data_to_insert = [
-        (row['ts'], row['coin'], row['price_usd']) for row in rows
+        (row['timestamp'], row['coin'], row['price_usd']) for row in rows
     ]
     
     # Insert all the new rows at once
