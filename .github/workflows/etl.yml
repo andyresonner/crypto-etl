@@ -4,8 +4,11 @@ permissions:
   contents: write
 
 on:
+  push:                  # <-- This is the new part
+    branches:            #
+      - main             #
   schedule:
-    - cron: '0 * * * *'     # hourly
+    - cron: '0 * * * *'      # hourly
   workflow_dispatch: {}
 
 jobs:
@@ -20,8 +23,9 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python -m crypto_etl.main          # update prices.csv
-      - run: python plot.py                     # generate docs/chart.png
+      - run: python -m crypto_etl.main           # update prices.csv & db
+      # The next line is commented out because main.py already regenerates the chart
+      # - run: python plot.py                   # generate docs/chart.png
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
